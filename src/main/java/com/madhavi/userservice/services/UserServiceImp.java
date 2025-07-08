@@ -6,6 +6,7 @@ import com.madhavi.userservice.repositories.TokenRepository;
 import com.madhavi.userservice.repositories.UserRepository;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -17,14 +18,14 @@ import java.util.Optional;
 @Service
 public class UserServiceImp implements UserService{
     private UserRepository userRepository;
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private PasswordEncoder passwordEncoder;
     private TokenRepository tokenRepository;
 
     public UserServiceImp(UserRepository userRepository ,
-                          BCryptPasswordEncoder bCryptPasswordEncoder,
+                          PasswordEncoder passwordEncoder,
                           TokenRepository tokenRepository){
         this.userRepository = userRepository;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.passwordEncoder = passwordEncoder;
         this.tokenRepository = tokenRepository;
     }
 
@@ -36,7 +37,7 @@ public class UserServiceImp implements UserService{
         user.setEmail(email);
 
         //first encrypt the password using Bcrypt algo before storing into db
-        user.setHashedPassword(bCryptPasswordEncoder.encode(password));
+        user.setHashedPassword(passwordEncoder.encode(password));
         return userRepository.save(user);
     }
 
@@ -48,7 +49,7 @@ public class UserServiceImp implements UserService{
 
         }
         User user = optionalUser.get();
-        if(bCryptPasswordEncoder.matches(password , user.getHashedPassword())){
+        if(passwordEncoder.matches(password , user.getHashedPassword())){
             //credentials right need to generate the token
             Token token = createToken(user);
             Token savedToken = tokenRepository.save(token);
