@@ -1,10 +1,14 @@
 package com.madhavi.userservice.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.madhavi.userservice.dtos.SendEmailEventDto;
 import com.madhavi.userservice.models.Token;
 import com.madhavi.userservice.models.User;
 import com.madhavi.userservice.repositories.TokenRepository;
 import com.madhavi.userservice.repositories.UserRepository;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,17 +24,23 @@ public class UserServiceImp implements UserService{
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
     private TokenRepository tokenRepository;
+    private KafkaTemplate<String, String> kafkaTemplate;
+    private ObjectMapper objectMapper;
 
     public UserServiceImp(UserRepository userRepository ,
                           PasswordEncoder passwordEncoder,
-                          TokenRepository tokenRepository){
+                          TokenRepository tokenRepository,
+                          KafkaTemplate<String, String> kafkaTemplate,
+                          ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenRepository = tokenRepository;
+        this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @Override
-    public User signUp(String name, String email, String password) {
+    public User signUp(String name, String email, String password) throws JsonProcessingException {
 
         User user = new User();
         user.setName(name);
@@ -38,7 +48,17 @@ public class UserServiceImp implements UserService{
 
         //first encrypt the password using Bcrypt algo before storing into db
         user.setHashedPassword(passwordEncoder.encode(password));
-        return userRepository.save(user);
+        user = userRepository.save(user);
+        SendEmailEventDto eventDto = new SendEmailEventDto();
+        eventDto.setEmail(email);
+        eventDto.setSubject("Hello Good Afternoon");
+        eventDto.setBody("Ekkuva dabbulu unte naaku phonepe cheyy, nenu em anukonu");
+
+
+        kafkaTemplate.send("sendEmailEvent" ,
+                objectMapper.writeValueAsString(eventDto));
+
+        return user;
     }
 
     @Override

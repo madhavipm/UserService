@@ -1,6 +1,7 @@
 package com.madhavi.userservice.controllers;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.madhavi.userservice.dtos.*;
 import com.madhavi.userservice.models.Token;
 import com.madhavi.userservice.models.User;
@@ -22,7 +23,7 @@ public class UserController {
         return userService.login(loginRequestDto.getEmail(), loginRequestDto.getPassword());
     }
     @PostMapping("/signup")
-    public UserDto signUp(@RequestBody SignupRequestDto signupRequestDto){
+    public UserDto signUp(@RequestBody SignupRequestDto signupRequestDto) throws JsonProcessingException {
        User user =  userService.signUp(signupRequestDto.getName(), signupRequestDto.getEmail(), signupRequestDto.getPassword());
        return UserDto.from(user);
     }
