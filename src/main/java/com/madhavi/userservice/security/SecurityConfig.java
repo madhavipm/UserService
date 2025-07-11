@@ -65,16 +65,15 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // ✅ Updated way
-                .cors(cors -> cors.disable()) // ✅ Same for CORS
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/users/signup", "/users/login").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .formLogin(Customizer.withDefaults());
+                        .anyRequest().permitAll() // 💥 Allow everything
+                );
 
         return http.build();
     }
+
 
     // 3. In-memory user details
     @Bean
